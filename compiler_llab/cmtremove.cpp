@@ -1,0 +1,102 @@
+#include <iostream> 
+#include <fstream> 
+using namespace std; 
+
+int main() { 
+    ifstream fin("input.c"); 
+    ofstream fout("output.c"); 
+ 
+    if (!fin.is_open() || !fout.is_open()) { 
+        cout << "Error opening file!" << endl; 
+        return 1; 
+    } 
+ 
+    char c; 
+    enum State { NORMAL, IN_STRING, IN_CHAR, IN_SL_COMMENT, IN_ML_COMMENT }; 
+    State state = NORMAL; 
+ 
+    while (fin.get(c)) { 
+        if (state == NORMAL) { 
+            if (c == '/') { 
+                if (fin.peek() == '/') { 
+                    state = IN_SL_COMMENT; 
+                    fin.get(c); // consume second '/' 
+                    continue; 
+                } 
+                else if (fin.peek() == '*') { 
+                    state = IN_ML_COMMENT; 
+                    fin.get(c); // consume '*' 
+                    continue; 
+                } 
+                else { 
+                    fout.put(c); 
+                } 
+            } 
+            else if (c == '"') { 
+                state = IN_STRING; 
+                fout.put(c); 
+            } 
+            else if (c == '\'') { 
+                state = IN_CHAR; 
+                fout.put(c); 
+            } 
+            else { 
+                fout.put(c); 
+            } 
+        } 
+        else if (state == IN_STRING) { 
+            fout.put(c); 
+            if (c == '\\') { // escape sequence 
+                if (fin.get(c)) fout.put(c); 
+            } else if (c == '"') { 
+                state = NORMAL; 
+            } 
+        } 
+        else if (state == IN_CHAR) { 
+            fout.put(c); 
+            if (c == '\\') { // escape sequence 
+                if (fin.get(c)) fout.put(c); 
+            } else if (c == '\'') { 
+                state = NORMAL; 
+            } 
+        } 
+        else if (state == IN_SL_COMMENT) { 
+            if (c == '\n') { 
+                fout.put('\n'); 
+                state = NORMAL; 
+            } 
+        } 
+        else if (state == IN_ML_COMMENT) { 
+            if (c == '*' && fin.peek() == '/') { 
+                fin.get(c); // consume '/' 
+                state = NORMAL; 
+            } 
+} 
+} 
+fin.close(); 
+fout.close(); 
+cout << "Comments removed successfully! Check output.c" << endl; 
+return 0; 
+} 
+
+
+// 8. Sample Input (input.c) 
+// #include <stdio.h> 
+// int main() { 
+// // This is a real comment 
+// printf("This is not a comment: // inside string\n"); 
+// printf("Multi-line style too: /* not a comment */\n"); 
+// char c = '/';  // Another comment 
+// return 0; 
+// }
+
+
+
+// 9. Sample Output (output.c) 
+// #include <stdio.h> 
+// int main() { 
+// printf("This is not a comment: // inside string\n"); 
+// printf("Multi-line style too: /* not a comment */\n"); 
+// char c = '/';   
+// return 0; 
+// } 
