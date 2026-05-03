@@ -1,0 +1,17 @@
+#include <iostream>
+using namespace std;
+
+// This is a single line comment
+
+int main() {
+    int a = 10; /* this is inline comment */
+    
+    /*
+      This is a 
+      multi-line comment
+    */
+    
+    cout << a << endl; // print value
+
+    return 0;
+}
